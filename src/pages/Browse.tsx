@@ -913,6 +913,14 @@ export default function Browse() {
     pendingScrollTopRef.current = null;
   }, []);
 
+  // The scroll container only exists once a game path is set (without one the
+  // page early-returns a placeholder). Browse can mount in that state and get
+  // the path a moment later: first-run setup navigates here while the store
+  // still holds the pre-setup settings. The effects that bind to the container
+  // re-run when it appears. Mount-only, they bailed on the null ref for good,
+  // containerWidth stayed 0 and the grid collapsed to a single column.
+  const hasGamePath = !!activeDeadlockPath;
+
   useLayoutEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -945,7 +953,7 @@ export default function Browse() {
       observer.disconnect();
       window.removeEventListener('resize', updateMetrics);
     };
-  }, []);
+  }, [hasGamePath]);
 
   // Mirror scrollTop into a ref on every scroll. The unmount cleanup below
   // runs as a passive effect — by then React has already nulled
@@ -993,7 +1001,7 @@ export default function Browse() {
       }
       isBrowseScrollingRef.current = false;
     };
-  }, []);
+  }, [hasGamePath]);
 
   // Persist session cache on unmount so navigating back resumes exactly
   // where the user left off. Refs feed the cleanup with current values
